@@ -7,8 +7,8 @@ SELECT
     m.views AS view_count,
     m.forwards AS forward_count,
     m.has_image
-FROM {{ ref('stg_telegram_messages') }} m
-LEFT JOIN {{ ref('dim_channels') }} c
+FROM {{ ref('stg_telegram_messages') }} AS m
+LEFT JOIN {{ ref('dim_channels') }} AS c
     ON m.channel_name = c.channel_name
-LEFT JOIN {{ ref('dim_dates') }} d
-    ON m.message_date::date = d.full_date;
+LEFT JOIN {{ ref('dim_dates') }} AS d
+    ON m.message_date::date = d.full_date

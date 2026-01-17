@@ -8,4 +8,4 @@ SELECT
     EXTRACT(QUARTER FROM message_date) AS quarter,
     EXTRACT(YEAR FROM message_date) AS year,
     CASE WHEN EXTRACT(DOW FROM message_date) IN (0,6) THEN TRUE ELSE FALSE END AS is_weekend
-FROM {{ ref('stg_telegram_messages') }};
+FROM {{ ref('stg_telegram_messages') }}

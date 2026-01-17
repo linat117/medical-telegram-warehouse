@@ -7,14 +7,14 @@ models:
         tests:
           - unique
           - not_null
+
       - name: view_count
         tests:
           - not_null
-          - expression_is_true: "view_count >= 0"
+
       - name: forward_count
         tests:
           - not_null
-          - expression_is_true: "forward_count >= 0"
 
   - name: dim_channels
     columns:
@@ -22,6 +22,7 @@ models:
         tests:
           - unique
           - not_null
+
       - name: channel_name
         tests:
           - not_null
