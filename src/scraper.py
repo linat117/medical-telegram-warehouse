@@ -1,49 +1,40 @@
-import os
 import json
 import logging
 from datetime import datetime
-from pathlib import Path
+from typing import List, Dict, Any, Optional
 
 from telethon import TelegramClient
 from telethon.tl.types import MessageMediaPhoto
-from dotenv import load_dotenv
-from tqdm import tqdm
-#load env't variables
-load_dotenv()
-API_ID = int(os.getenv("TELEGRAM_API_ID"))
-API_HASH = os.getenv("TELEGRAM_API_HASH")
 
-if not API_ID or not API_HASH:
-    raise ValueError("Telegram API credentials not found!.")
-#configure logging
+from config import TelegramConfig, ChannelConfig, DataPathsConfig
+
+# Validate Telegram API credentials
+TelegramConfig.validate()
+
+# Configure logging
 LOG_FILE = f"logs/scraper_{datetime.now().strftime('%Y_%m_%d')}.log"
 
 logging.basicConfig(
-    level = logging.INFO,
-    format = "%(asctime)s - %(levelname)s - %(message)s",
-    handlers = [
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
         logging.FileHandler(LOG_FILE),
         logging.StreamHandler()
     ]
 )
 
-#define the channel to scrape
+# Helper function to save JSON messages
 
-CHANNELS  =[
-    "lobelia4cosmetics",
-    "CheMed123",
-    "tikvahpharma"
-]
-#create data lake path
-BASE_DATA_PATH = Path("data/raw")
-MESSAGE_PATH = BASE_DATA_PATH / "telegram_messages"
-IMAGE_PATH = BASE_DATA_PATH / "images"
-
-# a helper function : to save json
-
-def save_messages(messages, channel_name):
+def save_messages(messages: List[Dict[str, Any]], channel_name: str) -> None:
+    """
+    Save messages to a JSON file in the data lake directory structure.
+    
+    Args:
+        messages: List of message dictionaries to save.
+        channel_name: Name of the channel being scraped.
+    """
     today = datetime.now().strftime("%Y-%m-%d")
-    output_dir = MESSAGE_PATH / today
+    output_dir = DataPathsConfig.MESSAGE_PATH / today
     output_dir.mkdir(parents = True, exist_ok = True)
 
     file_path = output_dir / f"{channel_name}.json"
@@ -53,13 +44,20 @@ def save_messages(messages, channel_name):
 
     logging.info(f"Saved {len(messages)} messages for {channel_name}")
 
-#main scraping function
+# Main scraping function
 
-async def scrape_channel(client , channel_name):
-    logging.info(f"Scraping channel : {channel_name}")
+async def scrape_channel(client: TelegramClient, channel_name: str) -> None:
+    """
+    Scrape messages from a Telegram channel and save them to the data lake.
+    
+    Args:
+        client: TelegramClient instance for API access.
+        channel_name: Name of the channel to scrape.
+    """
+    logging.info(f"Scraping channel: {channel_name}")
     messages_data = []
 
-    channel_image_dir = IMAGE_PATH / channel_name
+    channel_image_dir = DataPathsConfig.IMAGE_PATH / channel_name
     channel_image_dir.mkdir(parents  =True, exist_ok = True)
 
     async for message in client.iter_messages(channel_name, limit = 1000):
@@ -86,11 +84,16 @@ async def scrape_channel(client , channel_name):
     save_messages(messages_data, channel_name)
 
 
-# main entry point 
+# Main entry point
 
-async def main():
-    async with TelegramClient("telegram_session", API_ID, API_HASH) as client:
-        for channel in CHANNELS:
+async def main() -> None:
+    """
+    Main entry point for the Telegram scraper.
+    
+    Iterates through configured channels and scrapes their messages.
+    """
+    async with TelegramClient("telegram_session", TelegramConfig.API_ID, TelegramConfig.API_HASH) as client:
+        for channel in ChannelConfig.CHANNELS:
             try: 
                 await scrape_channel(client, channel)
             except Exception as e:
