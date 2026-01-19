@@ -1,26 +1,32 @@
-WITH detections AS (
-    SELECT
+with source as (
+
+    select
         image_name,
+        detected_objects,
         image_category,
         confidence_score
-    FROM {{ ref('stg_yolo_detections') }}
+    from raw.yolo_detections
+
 ),
 
-messages AS (
-    SELECT
-        message_id,
-        image_name,
-        channel_key,
-        date_key
-    FROM {{ ref('fct_messages') }}
+cleaned as (
+
+    select
+        -- image identifier
+        image_name::text as image_name,
+
+        -- detected objects as text (comma-separated)
+        nullif(detected_objects, '')::text as detected_objects,
+
+        -- standardize category values
+        lower(image_category)::text as image_category,
+
+        -- ensure numeric confidence
+        confidence_score::numeric as confidence_score
+
+    from source
 )
 
-SELECT
-    m.message_id,
-    m.channel_key,
-    m.date_key,
-    d.image_category,
-    d.confidence_score
-FROM messages m
-JOIN detections d
-    ON m.image_name = d.image_name
+select *
+from cleaned
+where image_name is not null
