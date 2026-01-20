@@ -21,10 +21,17 @@ MODEL_NAME = "yolov8n.pt"
 IMAGE_EXTENSIONS = ("*.jpg", "*.jpeg", "*.png", "*.JPG", "*.PNG")
 
 # =========================
-# Load YOLO Model
+# YOLO Model (lazy loaded)
 # =========================
 
-model = YOLO(MODEL_NAME)
+_model = None
+
+def get_model():
+    """Lazy load YOLO model only when needed."""
+    global _model
+    if _model is None:
+        _model = YOLO(MODEL_NAME)
+    return _model
 
 # =========================
 # Helper Functions
@@ -82,6 +89,9 @@ def run_detection():
         return results_data
 
     print(f"📸 Found {len(image_paths)} images. Running YOLO detection...")
+    
+    # Load model only when actually needed
+    model = get_model()
 
     for image_path in image_paths:
         detections = model(image_path, verbose=False)[0]
