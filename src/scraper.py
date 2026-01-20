@@ -8,9 +8,6 @@ from telethon.tl.types import MessageMediaPhoto
 
 from config import TelegramConfig, ChannelConfig, DataPathsConfig
 
-# Validate Telegram API credentials
-TelegramConfig.validate()
-
 # Configure logging
 LOG_FILE = f"logs/scraper_{datetime.now().strftime('%Y_%m_%d')}.log"
 
@@ -92,6 +89,9 @@ async def main() -> None:
     
     Iterates through configured channels and scrapes their messages.
     """
+    # Validate Telegram API credentials only when actually running
+    TelegramConfig.validate()
+    
     async with TelegramClient("telegram_session", TelegramConfig.API_ID, TelegramConfig.API_HASH) as client:
         for channel in ChannelConfig.CHANNELS:
             try: 
