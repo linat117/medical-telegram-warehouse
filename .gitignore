@@ -17,3 +17,7 @@ data/
 
 # Telegram session files
 *.session
+
+# Dagster temporary directories
+.tmp_dagster_home*/
+.dagster/
